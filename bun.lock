@@ -86,6 +86,16 @@
         "typescript": "^5.6.0",
       },
     },
+    "packages/task-engine": {
+      "name": "@seq/task-engine",
+      "version": "0.1.0",
+      "dependencies": {
+        "@seq/shared": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.6.0",
+      },
+    },
   },
   "catalog": {
     "elysia": "^1.4.29",
@@ -444,6 +454,8 @@
     "@seq/db": ["@seq/db@workspace:packages/db"],
 
     "@seq/shared": ["@seq/shared@workspace:packages/shared"],
+
+    "@seq/task-engine": ["@seq/task-engine@workspace:packages/task-engine"],
 
     "@sindresorhus/merge-streams": ["@sindresorhus/merge-streams@4.0.0", "https://registry.npmmirror.com/@sindresorhus/merge-streams/-/merge-streams-4.0.0.tgz", {}, "sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ=="],
 
