@@ -1,18 +1,19 @@
 import { describe, expect, it } from 'bun:test'
 import { assertModelConfigConsistent } from '../src/model-config-check'
-import type { ModelConfig } from '../src/types'
+import type { ModelConfig, ModelPricing, RequestType } from '../src/types'
+import type { ModelCategory } from '@seq/shared'
 
-const base = {
+const base: Pick<ModelConfig, 'id' | 'model' | 'supportedModels' | 'displayName' | 'category' | 'subCategory' | 'endpoint' | 'async' | 'pricing' | 'requestType'> = {
   id: 'm',
   model: 'm',
   supportedModels: ['m'],
   displayName: 'M',
-  category: 'video',
+  category: 'video' as ModelCategory,
   subCategory: 't2v',
   endpoint: '/e',
   async: true,
-  pricing: { unit: 'per_second' as const, quantityKey: 'duration', tiers: [{ condition: {}, price: 1 }] },
-  requestType: 'video-t2v' as const,
+  pricing: { unit: 'per_second', quantityKey: 'duration', tiers: [{ condition: {}, price: 1 }] } satisfies ModelPricing,
+  requestType: 'video-t2v' as RequestType,
 }
 
 describe('assertModelConfigConsistent', () => {

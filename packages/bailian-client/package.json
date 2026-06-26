@@ -1,0 +1,17 @@
+{
+  "name": "@seq/bailian-client",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@seq/shared": "workspace:*",
+    "@seq/bailian-core": "workspace:*"
+  },
+  "devDependencies": { "typescript": "^5.6.0" }
+}

@@ -44,6 +44,17 @@
         "vite": "^8.1.0",
       },
     },
+    "packages/bailian-client": {
+      "name": "@seq/bailian-client",
+      "version": "0.1.0",
+      "dependencies": {
+        "@seq/bailian-core": "workspace:*",
+        "@seq/shared": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.6.0",
+      },
+    },
     "packages/bailian-core": {
       "name": "@seq/bailian-core",
       "version": "0.1.0",
@@ -425,6 +436,8 @@
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.1", "https://registry.npmmirror.com/@rolldown/pluginutils/-/pluginutils-1.0.1.tgz", {}, "sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw=="],
 
     "@sec-ant/readable-stream": ["@sec-ant/readable-stream@0.4.1", "https://registry.npmmirror.com/@sec-ant/readable-stream/-/readable-stream-0.4.1.tgz", {}, "sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg=="],
+
+    "@seq/bailian-client": ["@seq/bailian-client@workspace:packages/bailian-client"],
 
     "@seq/bailian-core": ["@seq/bailian-core@workspace:packages/bailian-core"],
 
