@@ -1,0 +1,8 @@
+node_modules/
+.env
+dist/
+storage/
+.turbo/
+*.tsbuildinfo
+coverage/
+drizzle/generated/

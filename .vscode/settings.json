@@ -1,0 +1,12 @@
+{
+    "json.schemaDownload.enable": true,
+    "json.schemas": [
+        {
+        "fileMatch": [
+            "/*.json",
+            "/*.jsonc"
+        ],
+        "url": "https://turbo.build/schema.json"
+        }
+    ]
+}
