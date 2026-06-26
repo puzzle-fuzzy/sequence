@@ -113,5 +113,8 @@ export type ProviderResult =
 // 生成输入参数 — 附着到 generation_records.inputParams JSONB
 // ---------------------------------------------------------------------------
 
+/** 生成模型大类 */
+export type ModelCategory = 'image' | 'video' | 'audio' | 'text'
+
 /** 生成任务的输入参数（key = ModelConfig.parameters[].name，value = 用户填写值） */
 export type GenerationInputParams = Record<string, unknown>
