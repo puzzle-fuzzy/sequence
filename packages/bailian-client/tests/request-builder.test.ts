@@ -74,4 +74,18 @@ describe('buildRequestBody', () => {
       { type: 'reference_video', url: 'http://r2' },
     ])
   })
+
+  it('parameter target with field alias renames the parameter (PixVerse resolution→size)', () => {
+    const cfg: ModelConfig = { ...baseCfg, requestType: 'video-t2v', parameters: [], inputMapping: { prompt: { target: 'prompt' }, resolution: { target: 'parameter', field: 'size' } } }
+    const body = buildRequestBody(cfg, { prompt: 'cat', resolution: '1280*720' })
+    expect(body.parameters).toEqual({ size: '1280*720' })
+    expect(body.parameters).not.toHaveProperty('resolution')
+  })
+
+  it('image2image: flat input (no messages wrapping)', () => {
+    const cfg: ModelConfig = { ...baseCfg, requestType: 'image2image', parameters: [], inputMapping: { image_url: { target: 'mediaField', field: 'image_url' }, source_lang: { target: 'mediaField', field: 'source_lang' } } }
+    const body = buildRequestBody(cfg, { image_url: 'http://x.png', source_lang: 'zh' })
+    expect(body.input).toEqual({ image_url: 'http://x.png', source_lang: 'zh' })
+    expect(body.input).not.toHaveProperty('messages')
+  })
 })

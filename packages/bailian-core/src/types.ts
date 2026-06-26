@@ -56,20 +56,21 @@ export interface ModelParameter {
  *   prompt     → input.prompt
  *   media      → input.media[{type, url}]
  *   mediaField → input[<field>]
- *   parameter  → parameters[<paramName>]
+ *   parameter  → parameters[<field ?? paramName>]（field 省略时用参数名，设置时为别名，如 PixVerse resolution→size）
  *   ignored    → 跳过（UI-only）
  */
 export type InputMapping =
   | { target: 'prompt' }
   | { target: 'media'; mediaType: string }
   | { target: 'mediaField'; field: string }
-  | { target: 'parameter' }
+  | { target: 'parameter'; field?: string }
   | { target: 'ignored' }
 
 /** 请求体形状 — 决定客户端如何塑形 request body */
 export type RequestType =
   | 'chat'
-  | 'image'
+  | 'image' // messages 结构（multimodal-generation 同步 / image-generation 异步，端点差异由 ModelConfig.endpoint+async 表达）
+  | 'image2image' // flat input（image2image/image-synthesis，如 qwen-mt-image）
   | 'video-t2v'
   | 'video-media'
   | 'audio'
