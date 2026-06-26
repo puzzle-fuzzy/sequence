@@ -12,6 +12,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu"
+import { api } from "@/lib/api";
+import { useRecords } from "@/hooks/useRecords";
 
 /* ── Full-screen preview ── */
 
@@ -203,15 +205,47 @@ function RecordActions() {
 
 export default function Playground() {
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null)
+  const { records, loading, refresh } = useRecords()
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSendMessage = (
+  // 后端 GenerationRecord → Playground 的 Record_ 形状
+  const displayRecords: Record_[] = records.map((r) => {
+    const prompt = (r.inputParams.prompt as string) ?? '(无提示词)'
+    const tag = r.category === 'video' ? 'Video' : r.category === 'image' ? 'Image' : r.category === 'audio' ? 'Music' : r.category
+    const time = new Date(r.createdAt).toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit', month: 'numeric', day: 'numeric' })
+    const details: string[] = [r.model]
+    if (r.inputParams.resolution) details.push(String(r.inputParams.resolution))
+    if (r.inputParams.duration) details.push(`${r.inputParams.duration}s`)
+    const products: Product[] = r.files.map((f) => {
+      const isVideo = (f.mimeType ?? '').startsWith('video')
+      const isAudio = (f.mimeType ?? '').startsWith('audio')
+      return { type: isVideo ? 'Video' : isAudio ? 'Music' : 'Image', content: f.storagePath }
+    })
+    return { id: r.id, prompt, tag, time, details, products, status: r.status }
+  })
+
+  const handleSendMessage = async (
     message: string,
-    files: FileWithPreview[],
-    pastedContent: PastedContent[],
+    _files: FileWithPreview[],
+    _pastedContent: PastedContent[],
   ) => {
-    console.log("Message:", message);
-    console.log("Files:", files);
-    console.log("Pasted Content:", pastedContent);
+    if (!message.trim()) return
+    setSubmitting(true)
+    try {
+      // 第一步：用默认 t2v 模型提交生成任务
+      const res = await api.api.generate.post({
+        model: 'wan2.7-t2v',
+        category: 'video',
+        subCategory: 'text-to-video',
+        inputParams: { prompt: message },
+      })
+      if (res.error) throw new Error(`HTTP ${res.error.status}`)
+      void refresh() // 刷新历史
+    } catch (e) {
+      console.error('生成失败', e)
+    } finally {
+      setSubmitting(false)
+    }
   };
 
   return (
@@ -224,7 +258,13 @@ export default function Playground() {
       </div>
 
       <div className="flex-1 px-6 py-6 space-y-8">
-        {RECORDS.map((r) => (
+        {loading && (
+          <p className="text-sm text-muted-foreground">加载中...</p>
+        )}
+        {!loading && displayRecords.length === 0 && (
+          <p className="text-sm text-muted-foreground">还没有生成记录，在下方输入提示词开始创作。</p>
+        )}
+        {displayRecords.map((r) => (
           <div key={r.id}>
             {/* Prompt row */}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm mb-2 max-w-full">
@@ -259,6 +299,7 @@ export default function Playground() {
       <div className="fixed left-0 w-full bottom-0 px-6 py-4 flex justify-center">
         <ClaudeChatInput
           onSendMessage={handleSendMessage}
+          disabled={submitting}
           placeholder="在想什么？试试粘贴大量文本或上传文件..."
           maxFiles={10}
           maxFileSize={10 * 1024 * 1024}
@@ -289,6 +330,7 @@ interface Record_ {
   details?: string[];
   products: Product[];
   references?: Reference[];
+  status?: string;
 }
 
 /* ── Reference bar ── */
@@ -317,149 +359,3 @@ function ReferenceBar({ references }: { references?: Reference[] }) {
     </div>
   );
 }
-
-/* ── Mock data ── */
-
-const RECORDS: Record_[] = [
-  {
-    id: "1",
-    prompt:
-      "设计一个极简风格的 logo，以山峰为灵感，加上一些几何元素和渐变色处理，让整体看起来更有层次感",
-    tag: "Image",
-    time: "2 min",
-    details: ["1024×1024", "1:1", "SDXL"],
-    references: [
-      { type: "Image", label: "参考图", content: "#6366f1 #a855f7" },
-      { type: "File", label: "brand-guidelines.pdf", content: "" },
-    ],
-    products: [
-      { type: "Image", content: "#1e3a5f #4facfe" },
-      { type: "Image", content: "#2d1b69 #7c3aed" },
-      { type: "Image", content: "#065f46 #34d399" },
-      { type: "Image", content: "#7c2d12 #f97316" },
-    ],
-  },
-  {
-    id: "2",
-    prompt: "生成一段带钢琴伴奏的电子音乐，BPM 120，适合做视频开场",
-    tag: "Music",
-    time: "25 min",
-    details: ["3:22", "320kbps", "Stable Audio"],
-    products: [{ type: "Music", content: "" }],
-  },
-  {
-    id: "3",
-    prompt: "生成 6 张渐变色卡，从紫色到青色过渡，每一张要有不同的纹理质感",
-    tag: "Image",
-    time: "8 min",
-    details: ["1024×1024", "1:1", "Midjourney"],
-    products: [
-      { type: "Image", content: "#a855f7 #6366f1" },
-      { type: "Image", content: "#7c3aed #3b82f6" },
-      { type: "Image", content: "#6d28d9 #06b6d4" },
-      { type: "Image", content: "#5b21b6 #22d3ee" },
-      { type: "Image", content: "#4c1d95 #67e8f9" },
-      { type: "Image", content: "#3b0764 #a5f3fc" },
-    ],
-  },
-  {
-    id: "4",
-    prompt: "为一个独立科幻游戏设计 4 张概念场景图，赛博朋克风格",
-    tag: "Image",
-    time: "34 min",
-    details: ["1920×1080", "16:9", "DALL·E 3"],
-    references: [
-      { type: "Image", label: "参考概念图", content: "#0f0c29 #302b63" },
-    ],
-    products: [
-      { type: "Image", content: "#0f0c29 #302b63" },
-      { type: "Image", content: "#1a0a2e #16213e" },
-      { type: "Image", content: "#0f2027 #203a43" },
-      { type: "Image", content: "#0d324d #7f5a83" },
-    ],
-  },
-  {
-    id: "5",
-    prompt: "生成 30 秒产品展示视频，科技感风格，带动态光效",
-    tag: "Video",
-    time: "1h 2min",
-    details: ["30s", "1080p", "Runway Gen-3"],
-    references: [{ type: "Video", label: "参考视频素材", content: "#1e1b4b #3b0764" }],
-    products: [
-      { type: "Video", content: "#1e1b4b #3b0764" },
-      { type: "Video", content: "#0f172a #38bdf8" },
-    ],
-  },
-  {
-    id: "6",
-    prompt: "为一支 3 分钟的城市宣传片生成背景音乐，大气恢弘",
-    tag: "Music",
-    time: "45 min",
-    details: ["2:58", "320kbps", "Stable Audio"],
-    products: [{ type: "Music", content: "" }],
-  },
-  {
-    id: "7",
-    prompt: "给这段 2 分钟的产品介绍视频配上中文字幕",
-    tag: "Subtitle",
-    time: "12 min",
-    details: ["SRT", "Whisper"],
-    references: [{ type: "File", label: "product-intro-v2.mp4", content: "" }],
-    products: [
-      {
-        type: "Subtitle",
-        content:
-          "1\n00:00:02,000 --> 00:00:06,000\n欢迎来到我们的产品发布会\n\n2\n00:00:06,500 --> 00:00:12,000\n今天我们将为大家展示一款全新的 AI 创作工具\n\n3\n00:00:13,000 --> 00:00:18,000\n它能够帮助你快速生成图片、音乐和视频内容\n\n4\n00:00:19,000 --> 00:00:24,000\n无需任何专业背景，人人都可以成为创作者",
-      },
-    ],
-  },
-  {
-    id: "8",
-    prompt: "为一首古风歌曲生成 MV 画面，水墨风格，4 个场景",
-    tag: "Image",
-    time: "1h 10min",
-    details: ["1024×1024", "1:1", "Midjourney"],
-    products: [
-      { type: "Image", content: "#2c3e50 #3498db" },
-      { type: "Image", content: "#1a1a2e #e94560" },
-      { type: "Image", content: "#0f3443 #34e89e" },
-      { type: "Image", content: "#3e1f47 #f39c12" },
-    ],
-  },
-  {
-    id: "9",
-    prompt: "为这个 AI 生成的风景视频配上英文字幕，要求自然流畅",
-    tag: "Subtitle",
-    time: "20 min",
-    details: ["SRT", "Whisper"],
-    products: [
-      {
-        type: "Subtitle",
-        content:
-          "1\n00:00:01,000 --> 00:00:05,000\nNature reveals itself in the quietest moments\n\n2\n00:00:06,000 --> 00:00:11,000\nWhere the mountains meet the sky\n\n3\n00:00:12,000 --> 00:00:17,000\nAnd the rivers carve their ancient paths\n\n4\n00:00:18,000 --> 00:00:23,000\nWe are but temporary witnesses to its beauty",
-      },
-    ],
-  },
-  {
-    id: "10",
-    prompt: "为一款手游生成 8 张角色立绘，奇幻风格，角色有不同职业",
-    tag: "Image",
-    time: "2h 15min",
-    details: ["512×768", "2:3", "NovelAI"],
-    references: [
-      { type: "Image", label: "角色参考 A", content: "#4a0e4e #d4145a" },
-      { type: "Image", label: "角色参考 B", content: "#0c3483 #a2b6df" },
-      { type: "File", label: "character-sheet.pdf", content: "" },
-    ],
-    products: [
-      { type: "Image", content: "#4a0e4e #d4145a" },
-      { type: "Image", content: "#0c3483 #a2b6df" },
-      { type: "Image", content: "#1f4037 #99f2c8" },
-      { type: "Image", content: "#7b2c13 #e6a11e" },
-      { type: "Image", content: "#2c2c54 #a7c5eb" },
-      { type: "Image", content: "#3a1c71 #d76d77" },
-      { type: "Image", content: "#0d1b2a #1b3a4b" },
-      { type: "Image", content: "#4a3f35 #c9b18c" },
-    ],
-  },
-]

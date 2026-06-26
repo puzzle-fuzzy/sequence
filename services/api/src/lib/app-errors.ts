@@ -1,4 +1,4 @@
-import { Elysia, type ErrorHandler } from 'elysia'
+import type { ErrorHandler } from 'elysia'
 
 /** 统一错误基类 — 路由 throw 子类，全局 onError 序列化。 */
 export abstract class AppError extends Error {

@@ -22,7 +22,6 @@ const seed: ModelParameter = { name: 'seed', label: '随机种子', type: 'numbe
 const audio: ModelParameter = { name: 'audio', label: '生成音频', type: 'boolean', defaultValue: false, description: '是否生成背景音乐和音效（仅 Q3 系列支持）' }
 
 // video-media 的标准 inputMapping（prompt + media + parameters）
-const mediaMapping = (extra: Record<string, InputMapping> = {}): InputMapping extends never ? never : Record<string, InputMapping> => extra as never
 const I2V_MAP: Record<string, InputMapping> = {
   prompt: { target: 'prompt' },
   media: { target: 'media', mediaType: 'first_frame' },

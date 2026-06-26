@@ -74,7 +74,7 @@ export async function getRecord(userId: string, recordId: string) {
 }
 
 export async function listUserRecords(userId: string, category?: string, limit = 50) {
-  const { items, total } = await listRecords(userId, limit)
+  const { items } = await listRecords(userId, limit)
   const filtered = category ? items.filter((r) => r.category === category) : items
   return {
     items: filtered.map((r) => toRecordResponse(r)),
