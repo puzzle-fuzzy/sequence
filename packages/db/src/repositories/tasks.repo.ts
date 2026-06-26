@@ -1,7 +1,7 @@
 import { and, desc, eq, isNull, lt, lte, or, sql } from 'drizzle-orm'
 import { db } from '../client'
 import { tasks, type NewTask, type Task } from '../schema/tasks'
-import { TASK_STATUS } from '@seq/shared'
+import { TASK_STATUS, type TaskErrorInfo } from '@seq/shared'
 
 export async function createTask(input: NewTask): Promise<Task> {
   const rows = await db.insert(tasks).values(input).returning()
@@ -34,7 +34,7 @@ export async function claimNextTask(workerId: string, claimTtlMs: number): Promi
     .where(eligible)
     .orderBy(tasks.priority, tasks.createdAt)
     .limit(1)
-    .for('update skip locked')
+    .for('update', { skipLocked: true })
 
   const claimed = claimedRows[0]
   if (!claimed) return null
@@ -89,9 +89,15 @@ export async function markRetrying(id: string, nextRunAt: Date): Promise<Task | 
 }
 
 export async function markFailed(id: string, errorJson: Record<string, unknown>, errorMessage: string): Promise<Task | null> {
+  const info: TaskErrorInfo = {
+    category: (errorJson.category as TaskErrorInfo['category']) ?? 'system',
+    retriable: (errorJson.retriable as boolean | undefined) ?? false,
+    ...(errorJson.code !== undefined ? { code: String(errorJson.code) } : {}),
+    message: errorMessage,
+  }
   const updated = await db
     .update(tasks)
-    .set({ status: TASK_STATUS.FAILED, errorJson: { ...errorJson, message: errorMessage }, lockedBy: null, lockedUntil: null, updatedAt: new Date() })
+    .set({ status: TASK_STATUS.FAILED, errorJson: info, lockedBy: null, lockedUntil: null, updatedAt: new Date() })
     .where(eq(tasks.id, id))
     .returning()
   return updated[0] ?? null

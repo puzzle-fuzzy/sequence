@@ -13,6 +13,8 @@ let userId: string
 beforeAll(async () => {
   pool = new Pool({ connectionString: process.env.DATABASE_URL })
   setDb(drizzle(pool, { schema }))
+  // 清理可能的残留同名用户（重跑测试幂等），再创建
+  await pool.query("DELETE FROM users WHERE username = 'tasker'")
   const u = await usersRepo.createUser({ username: 'tasker', email: 'tasker@example.com', password: 'h' })
   userId = u.id
 })
