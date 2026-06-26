@@ -4,10 +4,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Avatar,
   AvatarFallback,
-  AvatarGroup,
-  AvatarGroupCount,
   AvatarImage,
 } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import "overlayscrollbars/overlayscrollbars.css";
 import { useOverlayScrollbars } from "overlayscrollbars-react";
 
@@ -27,6 +27,7 @@ export default function Layout() {
   }, [initBodyScrollbars]);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   const currentTab =
     location.pathname === "/playground" ? "/playground" : "/projects";
@@ -44,23 +45,17 @@ export default function Layout() {
             </TabsList>
           </Tabs>
 
-          <AvatarGroup className="grayscale">
-            <Avatar>
-              <AvatarImage
-                src="https://github.com/maxleiter.png"
-                alt="@maxleiter"
-              />
-              <AvatarFallback>LR</AvatarFallback>
-            </Avatar>
-            <Avatar>
-              <AvatarImage
-                src="https://github.com/evilrabbit.png"
-                alt="@evilrabbit"
-              />
-              <AvatarFallback>ER</AvatarFallback>
-            </Avatar>
-            <AvatarGroupCount>+3</AvatarGroupCount>
-          </AvatarGroup>
+          <div className="flex items-center gap-2">
+            {user && (
+              <Avatar>
+                <AvatarImage src={user.avatar ?? undefined} alt={user.username} />
+                <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => void logout()} className="h-8 px-2 text-xs">
+              登出
+            </Button>
+          </div>
         </div>
       </nav>
 

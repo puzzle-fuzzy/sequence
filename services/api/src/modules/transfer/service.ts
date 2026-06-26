@@ -1,4 +1,4 @@
-import { eq, and, isNull, desc } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 import { db, transferSessions, type TransferSession } from '@seq/db'
 import { serialize } from '@seq/shared'
 import { NotFoundError, ForbiddenError } from '../../lib/app-errors'

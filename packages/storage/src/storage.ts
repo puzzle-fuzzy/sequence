@@ -11,11 +11,10 @@ import type { StorageConfig, StoredObjectResult } from './types'
  * OSS 上传通过动态 import('ali-oss') 按需加载，避免未配置 OSS 时引入依赖。
  */
 export class AssetStorage {
-  private readonly ossClient: unknown | null
+  private readonly config: StorageConfig
 
-  constructor(private readonly config: StorageConfig) {
-    this.ossClient = null
-    // OSS 客户端惰性初始化在 initOssClient()，避免构造时副作用
+  constructor(config: StorageConfig) {
+    this.config = config
   }
 
   /** 是否启用了 OSS。 */
