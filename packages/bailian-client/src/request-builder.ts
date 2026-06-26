@@ -58,12 +58,17 @@ export function buildRequestBody(
   }
 
   switch (config.requestType) {
-    case 'image':
+    case 'image': {
+      // messages content：媒体 URL → { image }，prompt → { text }
+      const content: Array<{ text?: string } | { image: string }> = []
+      for (const m of media) content.push({ image: m.url })
+      content.push({ text: input.prompt as string })
       return {
         model: config.model,
-        input: { messages: [{ role: 'user', content: [{ text: input.prompt || '' }] }] },
+        input: { messages: [{ role: 'user', content }] },
         parameters,
       }
+    }
     case 'image2image':
       // flat input（image2image/image-synthesis，如 qwen-mt-image）：input 层平铺，无 messages 包裹
       return { model: config.model, input, parameters }
