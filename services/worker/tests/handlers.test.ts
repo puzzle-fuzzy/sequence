@@ -32,6 +32,18 @@ mock.module('@seq/bailian-client', () => ({
     request_id: 'r1',
   })),
   extractFromSyncImage: mock(() => []),
+  // ASR mock：返回固定转写结果
+  runAsr: mock(async () => ({
+    text: '你好世界',
+    srt: '1\n00:00:00,000 --> 00:00:02,000\n你好世界\n',
+    sentences: [{ begin: 0, end: 2000, text: '你好世界' }],
+  })),
+  // LLM mock：视频理解 + 合并返回不同文本，按调用顺序区分
+  chatMultimodal: mock(async (_cfg: unknown, input: { content: Array<{ text?: string; video?: string }> }) => {
+    // 含 video 的调用 = 视频理解；纯 text = 合并
+    const hasVideo = input.content.some((c) => c.video)
+    return { text: hasVideo ? '【场景分析】开场：城市夜景...' : '【最终剧本】场景1：城市夜景\n旁白：...', raw: {} }
+  }),
 }))
 
 // fake storage：downloadFromUrl 返回固定结构，不真实下载
@@ -101,7 +113,7 @@ describe('handleGenerate', () => {
 })
 
 describe('handleAnalysis', () => {
-  it('upserts step as succeeded (stub)', async () => {
+  it('analysis.asr: runs ASR and stores { text, srt, sentences }', async () => {
     const { createProject } = await import('@seq/db')
     const project = await createProject({ userId, videoUrl: 'http://v.mp4' })
     const task = {
@@ -109,14 +121,45 @@ describe('handleAnalysis', () => {
       type: 'analysis.asr',
       input: { projectId: project.id, step: 'asr', videoUrl: 'http://v.mp4' },
     } as never
-    const out = await handleAnalysis(task, makeFakeCtx())
-    expect(out.step).toBe('asr')
-    const stepRows = await pool.query('SELECT status FROM analysis_steps WHERE project_id = $1', [project.id])
+    const out = (await handleAnalysis(task, makeFakeCtx())) as { text: string; sentenceCount: number }
+    expect(out.text).toBe('你好世界')
+    expect(out.sentenceCount).toBe(1)
+    const stepRows = await pool.query('SELECT status, result FROM analysis_steps WHERE project_id = $1 AND step = $2', [project.id, 'asr'])
+    expect(stepRows.rows[0].status).toBe('succeeded')
+    expect((stepRows.rows[0].result as { text: string }).text).toBe('你好世界')
+  })
+
+  it('analysis.script: reads ASR result → video understand + merge → stores script', async () => {
+    const { createProject, upsertStep } = await import('@seq/db')
+    const project = await createProject({ userId, videoUrl: 'http://v.mp4' })
+    // 先填充 ASR 步骤结果（模拟上一步已完成）
+    await upsertStep(project.id, 'asr', { status: 'succeeded', result: { text: 'ASR 文本', srt: '1\n00:00:00,000 --> 00:00:01,000\nASR 文本\n' } })
+    const task = {
+      id: 't5',
+      type: 'analysis.script',
+      input: { projectId: project.id, step: 'script', videoUrl: 'http://v.mp4' },
+    } as never
+    const out = (await handleAnalysis(task, makeFakeCtx())) as { script: string; sceneAnalysis: string }
+    // 视频理解 mock 返回「场景分析」，合并 mock 返回「最终剧本」
+    expect(out.sceneAnalysis).toContain('场景分析')
+    expect(out.script).toContain('最终剧本')
+    const stepRows = await pool.query('SELECT status, result FROM analysis_steps WHERE project_id = $1 AND step = $2', [project.id, 'script'])
     expect(stepRows.rows[0].status).toBe('succeeded')
   })
 
+  it('analysis.script throws when ASR step not done', async () => {
+    const { createProject } = await import('@seq/db')
+    const project = await createProject({ userId, videoUrl: 'http://v.mp4' })
+    const task = {
+      id: 't6',
+      type: 'analysis.script',
+      input: { projectId: project.id, step: 'script', videoUrl: 'http://v.mp4' },
+    } as never
+    await expect(handleAnalysis(task, makeFakeCtx())).rejects.toThrow(/ASR.*未完成/)
+  })
+
   it('throws TaskInputError when missing projectId', async () => {
-    const task = { id: 't5', type: 'analysis.asr', input: { step: 'asr' } } as never
+    const task = { id: 't7', type: 'analysis.asr', input: { step: 'asr' } } as never
     await expect(handleAnalysis(task, makeFakeCtx())).rejects.toThrow(/缺少 projectId/)
   })
 })
