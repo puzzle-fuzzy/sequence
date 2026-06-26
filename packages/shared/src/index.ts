@@ -15,4 +15,5 @@ export {
   type AudioProviderResult,
   type FailedProviderResult,
   type GenerationInputParams,
+  type ModelCategory,
 } from './domain-types'
