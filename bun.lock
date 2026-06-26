@@ -10,11 +10,20 @@
         "typescript": "^5.6.0",
       },
     },
+    "packages/shared": {
+      "name": "@seq/shared",
+      "version": "0.1.0",
+      "devDependencies": {
+        "typescript": "^5.6.0",
+      },
+    },
   },
   "catalog": {
     "elysia": "^1.4.29",
   },
   "packages": {
+    "@seq/shared": ["@seq/shared@workspace:packages/shared"],
+
     "@turbo/darwin-64": ["@turbo/darwin-64@2.10.0", "https://registry.npmmirror.com/@turbo/darwin-64/-/darwin-64-2.10.0.tgz", { "os": "darwin", "cpu": "x64" }, "sha512-EwvHThXzpY0KGd1/NAmuewI5D+aVa3Rl/OlxE36yfjUKb/+ySrfJrSlEFt8aD1OXwnnaHnQnPKHFndor0Zxlsg=="],
 
     "@turbo/darwin-arm64": ["@turbo/darwin-arm64@2.10.0", "https://registry.npmmirror.com/@turbo/darwin-arm64/-/darwin-arm64-2.10.0.tgz", { "os": "darwin", "cpu": "arm64" }, "sha512-9d2fTyyG0lf5Wq1bwJA9qUaeecViMkLcdctWaMMmCkxZ/JqypmqOwK3W6vmejeKVgkr06gSoiX8bD+xN5Jpxcg=="],
