@@ -23,7 +23,7 @@ export function applyMappings(
         input.prompt = value
         break
       case 'parameter':
-        parameters[paramName] = value
+        parameters[mapping.field ?? paramName] = value
         break
       case 'mediaField':
         input[mapping.field] = value
@@ -64,6 +64,9 @@ export function buildRequestBody(
         input: { messages: [{ role: 'user', content: [{ text: input.prompt || '' }] }] },
         parameters,
       }
+    case 'image2image':
+      // flat input（image2image/image-synthesis，如 qwen-mt-image）：input 层平铺，无 messages 包裹
+      return { model: config.model, input, parameters }
     case 'video-t2v':
     case 'video-media': {
       if (media.length > 0) input.media = media
