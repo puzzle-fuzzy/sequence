@@ -1,0 +1,21 @@
+{
+  "name": "@seq/worker",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "bun --env-file=../../.env run src/index.ts",
+    "start": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun --env-file=../../.env test"
+  },
+  "dependencies": {
+    "@seq/shared": "workspace:*",
+    "@seq/db": "workspace:*",
+    "@seq/storage": "workspace:*",
+    "@seq/bailian-core": "workspace:*",
+    "@seq/bailian-client": "workspace:*",
+    "@seq/task-engine": "workspace:*"
+  },
+  "devDependencies": { "typescript": "^5.6.0" }
+}
