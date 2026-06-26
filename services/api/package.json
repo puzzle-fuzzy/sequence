@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@elysia/cors": "^1.4.2",
+    "@elysia/eden": "^1.4.10",
     "@elysia/jwt": "^1.4.2",
     "@elysia/openapi": "^1.4.15",
     "@seq/shared": "workspace:*",

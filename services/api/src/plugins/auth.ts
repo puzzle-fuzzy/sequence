@@ -48,10 +48,15 @@ export const AUTH_COOKIE_OPTIONS = {
 
 export const AUTH_COOKIE_NAME = AUTH_COOKIE
 
-/** 签发 JWT（service 层用）。 */
+/** 签发 JWT（service 层用）。jwt 实例由路由层注入。 */
 export async function signUserToken(
   jwt: { sign: (p: unknown) => Promise<string> },
   user: { id: string; role: 'user' | 'admin' },
 ): Promise<string> {
   return jwt.sign({ sub: user.id, role: user.role })
+}
+
+/** login service 回调用的 jwt 签名接口（避免 service 层 import elysia jwt 类型）。 */
+export interface JwtSigner {
+  sign: (payload: unknown) => Promise<string>
 }

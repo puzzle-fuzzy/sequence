@@ -1,4 +1,4 @@
-import { Elysia } from 'elysia'
+import { Elysia, type ErrorHandler } from 'elysia'
 
 /** 统一错误基类 — 路由 throw 子类，全局 onError 序列化。 */
 export abstract class AppError extends Error {
@@ -42,8 +42,13 @@ export class InternalError extends AppError {
   readonly code = 'INTERNAL'
 }
 
-/** 全局错误处理 plugin — 序列化所有 AppError 子类为 { error, code, message }。 */
-export const errorHandlerPlugin = new Elysia({ name: 'error-handler' }).onError(({ error, set }) => {
+/**
+ * 全局错误处理器 — 序列化所有 AppError 子类为 { error, code, message }。
+ *
+ * 注册方式：在主 app 链上直接 `.onError(handleError)`，
+ * 而非 `.use(plugin)`（Elysia 插件作用域不会把 onError 传播到消费方 app）。
+ */
+export const handleError: ErrorHandler = ({ error, set }) => {
   if (error instanceof AppError) {
     set.status = error.statusCode
     return {
@@ -59,4 +64,5 @@ export const errorHandlerPlugin = new Elysia({ name: 'error-handler' }).onError(
     code: 'INTERNAL',
     message: error instanceof Error ? error.message : String(error),
   }
-})
+}
+
